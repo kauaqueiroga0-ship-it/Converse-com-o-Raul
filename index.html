@@ -167,10 +167,11 @@
   </main>
 
   <script>
-    // Configuração do Proxy CORS e da API Groq
-    const API_KEY = "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";
-    const TARGET_URL = "https://api.groq.com/openai/v1/chat/completions";
-    const API_URL = "https://corsproxy.io/?" + encodeURIComponent(TARGET_URL);
+    // Chave da Groq informada
+    const API_KEY = "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";
+    const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+    // Proxy utilizado para evitar erro de CORS no navegador
+    const API_URL = "https://corsproxy.io/?" + encodeURIComponent(GROQ_URL);
 
     const micButton = document.getElementById("micButton");
     const status = document.getElementById("status");
@@ -303,7 +304,7 @@
           "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "llama-3.3-70b-versatile",
           messages: [
             { 
               role: "system", 
@@ -320,7 +321,7 @@
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error?.message || `Erro na API (${response.status})`);
+        throw new Error(data.error?.message || `Erro na API Groq (${response.status})`);
       }
 
       return data.choices?.[0]?.message?.content || "O Raul não retornou uma resposta válida.";
@@ -338,7 +339,7 @@
         addMessage(answer, "assistant");
         speakText(answer);
       } catch (error) {
-        addMessage(`Erro: ${error.message}`, "assistant");
+        addMessage(`Erro Groq: ${error.message}`, "assistant");
         setStatus(error.message, false, true);
       } finally {
         micButton.disabled = false;
