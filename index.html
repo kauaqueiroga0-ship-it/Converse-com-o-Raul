@@ -54,7 +54,7 @@
       inset: 0; 
       width: 100vw; 
       height: 100vh; 
-      background-image: linear-gradient(rgba(0, 0, 0, .4), rgba(0, 0, 0, .6)), url("Favela.avif"); 
+      background-image: linear-gradient(rgba(0, 0, 0, .4), rgba(0, 0, 0, .6)), url("favela.png"); 
       background-size: cover; 
       background-position: center; 
       background-repeat: no-repeat; 
@@ -137,7 +137,7 @@
 
       <div class="left-panel">
         <div class="nina-stage" aria-label="Avatar do Raul">
-          <img class="nina-avatar" id="ninaAvatar" src="boca aberta olho aberto.png" alt="Raul" draggable="false" title="Clique para ouvir o Raul">
+          <img class="nina-avatar" id="ninaAvatar" src="boca-aberta-olho-aberto.png" alt="Raul" draggable="false" title="Clique para ouvir o Raul">
           <div class="nina-label">Líder Raul</div>
         </div>
       </div>
@@ -150,58 +150,53 @@
     let mouthTimer;
     let isSpeaking = false;
 
-    // Simula a piscadela de olhos
     function scheduleBlink() {
       clearInterval(blinkTimer);
       blinkTimer = setInterval(() => {
-        if (isSpeaking) return; // Não pisca no meio da fala para não sobrepor
-        ninaAvatar.src = "boca aberta olho fechado.png";
+        if (isSpeaking) return;
+        ninaAvatar.src = "boca-aberta-olho-fechado.png";
         setTimeout(() => { 
-          if (!isSpeaking) ninaAvatar.src = "boca aberta olho aberto.png"; 
+          if (!isSpeaking) ninaAvatar.src = "boca-aberta-olho-aberto.png"; 
         }, 180);
       }, 3500);
     }
 
-    // Função de fala nativa do navegador
     function speak(phrase) {
       if (!window.speechSynthesis) return;
 
-      window.speechSynthesis.cancel(); // Cancela falas anteriores
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(phrase);
       utterance.lang = "pt-BR";
       utterance.rate = 1.1;
 
       utterance.onstart = () => {
         isSpeaking = true;
-        // Alterna entre boca aberta normal e abertona enquanto fala
         mouthTimer = setInterval(() => {
-          ninaAvatar.src = ninaAvatar.src.includes("Boca%20abertona.png") || ninaAvatar.src.includes("Boca abertona.png")
-            ? "boca aberta olho aberto.png"
-            : "Boca abertona.png";
+          ninaAvatar.src = ninaAvatar.src.includes("boca-abertona.png")
+            ? "boca-aberta-olho-aberto.png"
+            : "boca-abertona.png";
         }, 200);
       };
 
       utterance.onend = () => {
         isSpeaking = false;
         clearInterval(mouthTimer);
-        ninaAvatar.src = "boca aberta olho aberto.png";
+        ninaAvatar.src = "boca-aberta-olho-aberto.png";
       };
 
       utterance.onerror = () => {
         isSpeaking = false;
         clearInterval(mouthTimer);
-        ninaAvatar.src = "boca aberta olho aberto.png";
+        ninaAvatar.src = "boca-aberta-olho-aberto.png";
       };
 
       window.speechSynthesis.speak(utterance);
     }
 
-    // Clique no avatar dispara a fala
     ninaAvatar.addEventListener("click", () => {
       speak("Meu nome é Raul");
     });
 
-    // Iniciar a animação de piscar
     scheduleBlink();
   </script>
 </body>
