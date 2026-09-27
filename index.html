@@ -172,11 +172,13 @@
       utterance.onstart = () => {
         isSpeaking = true;
         mouthTimer = setInterval(() => {
-          // Trata a troca da boca aceitando tanto o nome puro quanto o codificado (%20)
+          // Decodifica o caminho para lidar com %20 (espaço) e checa pelo 'B' maiúsculo de Boca abertona.png
           const currentSrc = decodeURIComponent(ninaAvatar.src);
-          ninaAvatar.src = currentSrc.includes("Boca abertona.png")
-            ? "boca aberta olho aberto.png"
-            : "Boca abertona.png";
+          if (currentSrc.includes("Boca abertona.png")) {
+            ninaAvatar.src = "boca aberta olho aberto.png";
+          } else {
+            ninaAvatar.src = "Boca abertona.png";
+          }
         }, 200);
       };
 
