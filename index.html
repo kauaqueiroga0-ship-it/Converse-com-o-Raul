@@ -172,7 +172,6 @@
       utterance.onstart = () => {
         isSpeaking = true;
         mouthTimer = setInterval(() => {
-          // Decodifica o caminho para lidar com %20 (espaço) e checa pelo 'B' maiúsculo de Boca abertona.png
           const currentSrc = decodeURIComponent(ninaAvatar.src);
           if (currentSrc.includes("Boca abertona.png")) {
             ninaAvatar.src = "boca aberta olho aberto.png";
