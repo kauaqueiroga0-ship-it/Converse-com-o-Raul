@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0c12">
+  <title>Voz Raul</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f0f11;
+      --panel: #151518;
+      --panel-strong: #1b1b1f;
+      --line: #2a2a2e;
+      --text: #e0e0e0;
+      --muted: #96969e;
+      --accent: #d2d2d6;
+      --accent-dark: #29292e;
+      --user: #252529;
+      --danger: #d97979;
+      --shadow: 0 16px 38px rgba(0, 0, 0, .2);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      color: var(--text);
+      background: #0d0d0f;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app { position: relative; width: 100vw; height: 100vh; margin: 0; }
+    .topbar { position: absolute; z-index: 3; top: 22px; left: 50%; display: flex; align-items: center; justify-content: center; gap: 16px; transform: translateX(-50%); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; color: #08110e; background: var(--accent); font-size: 20px; font-weight: 800; box-shadow: 0 0 28px rgba(103,232,181,.16); }
+    h1 { margin: 0; font-size: clamp(1.25rem, 3vw, 1.65rem); letter-spacing: -.02em; }
+    .subtitle { margin: 3px 0 0; color: var(--muted); font-size: .83rem; }
+
+    .workspace { position: absolute; inset: 0; min-height: 0; }
+    #city-background { position: fixed; z-index: 0; inset: 0; width: 100vw; height: 100vh; background-image: linear-gradient(rgba(0, 0, 0, .4), rgba(0, 0, 0, .6)), url("Favela.avif"); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; }
+    #city-background::before { display: none; }
+    .left-panel, .right-panel { overflow: hidden; border: 0; border-radius: 0; box-shadow: none; }
+    .left-panel { position: absolute; z-index: 2; inset: 0; display: block; height: 100%; background: transparent; }
+    .right-panel { position: absolute; z-index: 3; top: 78px; right: 24px; bottom: 24px; display: flex; width: min(390px, 34vw); min-height: 0; flex-direction: column; border: 1px solid rgba(255, 255, 255, .08); border-radius: 16px; background: rgba(12, 12, 14, .78); backdrop-filter: blur(12px); }
+    .chat-input { padding: 16px 20px 20px; }
+    .chat-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; }
+    .connection { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .78rem; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #a7a7ad; }
+    .clear-btn { border: 0; color: var(--muted); background: transparent; cursor: pointer; font: inherit; font-size: .78rem; }
+    .clear-btn:hover { color: var(--text); }
+
+    .admin-panel { margin: 18px 20px 0; padding: 15px 0; border: 0; background: transparent; }
+    .admin-title { margin: 0 0 8px; color: var(--muted); font-size: .7rem; letter-spacing: .13em; text-transform: uppercase; }
+    .admin-status { margin: 0; color: var(--text); font-family: Consolas, monospace; font-size: .9rem; }
+    .messages { display: flex; flex: 1; flex-direction: column; gap: 17px; min-height: 0; padding: 24px 20px; overflow-y: auto; }
+    .welcome { margin: auto; max-width: 430px; padding: 24px; text-align: center; color: var(--muted); }
+    .welcome-icon { margin-bottom: 12px; color: var(--accent); font-size: 2.2rem; }
+    .welcome h2 { margin: 0 0 8px; color: var(--text); font-size: 1.05rem; }
+    .welcome p { margin: 0; line-height: 1.55; font-size: .88rem; }
+    .message { display: flex; gap: 10px; max-width: 88%; animation: rise .28s ease-out both; }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .avatar { flex: 0 0 auto; display: grid; place-items: center; width: 29px; height: 29px; border-radius: 8px; color: #d5d5d9; background: var(--accent-dark); font-size: .75rem; font-weight: 700; }
+    .user .avatar { color: #e0e0e4; background: #333338; }
+    .bubble { padding: 11px 14px; border: 1px solid var(--line); border-radius: 5px 14px 14px 14px; background: var(--panel-strong); line-height: 1.5; font-size: .92rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .user .bubble { border-color: #334764; border-radius: 14px 5px 14px 14px; background: var(--user); }
+    .message-meta { margin-top: 5px; color: var(--muted); font-size: .68rem; }
+
+    .nina-stage { position: absolute; z-index: 2; inset: 0; display: grid; place-items: center; }
+    .nina-avatar { position: absolute; z-index: 2; top: 50%; left: 50%; display: block; width: auto; height: 80vh; max-width: 95vw; max-height: 850px; object-fit: contain; transform: translate3d(-50%, -50%, 0); will-change: transform; animation: ninaFloat 4.8s ease-in-out infinite; }
+    .nina-avatar.speaking { animation-name: ninaFloatSpeaking; animation-duration: 2.8s; }
+    .nina-label { position: absolute; z-index: 2; bottom: 2px; margin-top: 12px; color: var(--muted); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+    #oranges-background { position: absolute; z-index: 1; inset: 0; overflow: hidden; pointer-events: none; }
+    .floating-orange { position: absolute; z-index: 1; width: clamp(110px, 10vw, 160px); aspect-ratio: 1; object-fit: contain; opacity: .76; animation: floatOrange 6s ease-in-out infinite; }
+    .floating-orange.one { top: 10%; left: 8%; }
+    .floating-orange.two { top: 25%; right: 28%; width: 125px; animation-delay: 1.5s; }
+    .floating-orange.three { right: 8%; bottom: 16%; animation-delay: 3s; }
+    .floating-orange.four { bottom: 10%; left: 20%; width: 140px; animation-delay: 4.5s; }
+    .floating-orange.five { top: 17%; right: 8%; width: 115px; animation-delay: 6s; }
+    .floating-orange.six { bottom: 28%; left: 7%; width: 130px; animation-delay: 7.5s; }
+    .floating-orange.seven { top: 7%; left: 42%; width: 100px; animation-delay: 9s; }
+
+    .audio-indicator { position: absolute; z-index: 3; bottom: 166px; left: 50%; display: flex; align-items: end; justify-content: center; gap: 4px; height: 27px; margin: 0; transform: translateX(-50%); }
+    .audio-indicator span { width: 4px; height: 9px; border-radius: 3px; background: #a6a6ac; animation: equalizer 1s ease-in-out infinite alternate; }
+    .audio-indicator span:nth-child(2) { animation-delay: -.35s; }
+    .audio-indicator span:nth-child(3) { animation-delay: -.65s; }
+    .audio-indicator span:nth-child(4) { animation-delay: -.2s; }
+    .composer { position: absolute; z-index: 3; bottom: 22px; left: 50%; display: flex; width: min(580px, 90vw); flex-direction: column; align-items: center; gap: 11px; padding: 0 0 4px; transform: translateX(-50%); }
+    .status { min-height: 19px; color: var(--muted); font-size: .8rem; }
+    .status.active { color: var(--accent); }
+    .mic { position: relative; display: grid; place-items: center; width: 78px; height: 78px; border: 1px solid #55555b; border-radius: 50%; color: #111113; background: #d3d3d6; cursor: pointer; transition: transform .2s, background .2s; }
+    .mic:hover { filter: brightness(1.08); transform: translateY(-2px); }
+    .mic:disabled { cursor: not-allowed; opacity: .5; transform: none; }
+    .mic svg { width: 32px; height: 32px; }
+    .mic.recording { animation: pulse 1.35s infinite; background: #a9a9af; }
+    .mic.recording::before, .mic.recording::after { position: absolute; inset: -8px; border: 1px solid #69696f; border-radius: inherit; content: ""; animation: ring 1.8s infinite; }
+    .mic.recording::after { animation-delay: .7s; }
+    .hint { margin: 0; color: #657084; font-size: .72rem; }
+    .text-entry { display: flex; width: 100%; gap: 8px; margin-top: 5px; }
+    .text-entry input { min-width: 0; flex: 1; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; outline: 0; color: var(--text); background: rgba(9,11,16,.72); font: inherit; }
+    .text-entry input:focus { border-color: var(--accent); }
+    .send-btn { padding: 0 17px; border: 0; border-radius: 8px; color: #111113; background: #d3d3d6; cursor: pointer; font: inherit; font-weight: 700; }
+    .send-btn:disabled { cursor: not-allowed; opacity: .5; }
+    .voice-settings { display: grid; width: 100%; grid-template-columns: minmax(0, 1.2fr) minmax(150px, .8fr); gap: 10px; margin-top: 8px; }
+    .voice-control { display: flex; min-width: 0; flex-direction: column; gap: 6px; color: var(--muted); font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; }
+    .voice-control select { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; outline: 0; color: var(--text); background: #111113; font: inherit; font-size: .78rem; letter-spacing: 0; text-transform: none; }
+    .voice-control select:focus, .voice-control input:focus { border-color: #77777e; }
+    .rate-row { display: flex; align-items: center; gap: 8px; }
+    .voice-control input[type="range"] { width: 100%; accent-color: #bdbdc2; }
+    .rate-value { min-width: 35px; color: var(--text); font-size: .75rem; letter-spacing: 0; text-align: right; text-transform: none; }
+    .error { color: var(--danger); }
+
+    #splash-screen { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: rgba(0, 0, 0, 0.85); text-align: center; color: white; }
+    #splash-screen h1 { margin: 0 0 18px; font-size: clamp(2rem, 6vw, 4.2rem); }
+    #splash-screen p { max-width: 520px; margin: 0 0 28px; color: #d0d0d4; font-size: 1.1rem; }
+    #btn-start { padding: 15px 38px; border: 0; border-radius: 10px; color: #111113; background: var(--accent); cursor: pointer; font: inherit; font-size: 1.1rem; font-weight: 800; }
+
+    @keyframes pulse { 50% { transform: scale(1.06); } }
+    @keyframes ring { from { opacity: .8; transform: scale(.95); } to { opacity: 0; transform: scale(1.25); } }
+    @keyframes floatOrange { 0%, 100% { transform: translate3d(0, 0, 0) rotate(-4deg) scale(1); } 50% { transform: translate3d(0, -14px, 0) rotate(5deg) scale(1.035); } }
+    @keyframes ninaFloat { 0%, 100% { transform: translate3d(-50%, -50%, 0) translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(-50%, -50%, 0) translate3d(0, -7px, 0) scale(1.012); } }
+    @keyframes ninaFloatSpeaking { 0%, 100% { transform: translate3d(-50%, -50%, 0) translate3d(0, 0, 0) scale(1); } 35% { transform: translate3d(-50%, -50%, 0) translate3d(0, -10px, 0) scale(1.018); } 70% { transform: translate3d(-50%, -50%, 0) translate3d(0, -4px, 0) scale(1.008); } }
+    @keyframes equalizer { from { height: 7px; opacity: .5; } to { height: 25px; opacity: 1; } }
+    @keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 900px) { body { overflow: hidden; } .right-panel { top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; height: 45vh; min-height: 0; } .nina-avatar { height: 68vh; max-width: 88vw; } .composer { bottom: 14px; width: min(580px, 94vw); } .audio-indicator { bottom: 158px; } .message { max-width: 94%; } }
+  </style>
+</head>
+<body>
+  <div id="splash-screen">
+    <h1>Converse com o Líder Raul</h1>
+    <p>Sem enrolação e contra a opressão do sistema.</p>
+    <button id="btn-start" type="button">Começar</button>
+  </div>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">◉</div><div><h1>Converse com o Raul</h1><p class="subtitle">Converse naturalmente, sem digitar</p></div></div>
+    </header>
+
+    <section class="workspace" aria-label="Chatbot por voz">
+      <div id="city-background" aria-hidden="true"></div>
+      <div id="oranges-background" aria-hidden="true"><img class="floating-orange one" src="laranja.png" alt=""><img class="floating-orange two" src="laranja.png" alt=""><img class="floating-orange three" src="laranja.png" alt=""><img class="floating-orange four" src="laranja.png" alt=""><img class="floating-orange five" src="laranja.png" alt=""><img class="floating-orange six" src="laranja.png" alt=""><img class="floating-orange seven" src="laranja.png" alt=""></div>
+      <div class="left-panel">
+        <div class="nina-stage" aria-label="Avatar do Raul"><img class="nina-avatar" id="ninaAvatar" src="boca aberta olho aberto.png" alt="Raul" draggable="false"><div class="nina-label">Raul</div></div>
+        <div class="audio-indicator" aria-label="Indicador de áudio"><span></span><span></span><span></span><span></span></div>
+        <div class="composer">
+          <div class="status" id="leftStatus" role="status">[Status: Aguardando]</div>
+          <button class="mic" id="micButton" type="button" aria-label="Começar a ouvir" title="Começar a ouvir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg>
+          </button>
+          <div class="voice-settings" aria-label="Configurações de voz"><label class="voice-control">Perfil de voz<select id="voiceSelect"><option value="maligna" selected>Voz Maligna (Padrão)</option><option value="fofa">Voz Fofa / Infantil</option><option value="mulher">Voz de Mulher (Padrão)</option><option value="robotica">Voz Robótica / Monótona</option></select></label><label class="voice-control">Velocidade<span class="rate-row"><input id="voiceRate" type="range" min="0.5" max="2.5" step="0.1" value="1.7"><output class="rate-value" id="voiceRateValue">1.7x</output></span></label></div>
+          <p class="hint">Fale no microfone ou digite uma mensagem</p>
+        </div>
+      </div>
+      <div class="right-panel">
+        <div class="admin-panel" aria-live="polite"><p class="admin-title">Painel Admin / Status de Processamento</p><p class="admin-status" id="status" role="status">[Status: Aguardando]</p></div>
+        <div class="chat-header"><div class="connection"><span class="dot"></span> Raul conectado</div><button class="clear-btn" id="clearChat" type="button">Limpar conversa</button></div>
+        <div class="messages" id="messages" aria-live="polite">
+          <div class="welcome" id="welcome"><div class="welcome-icon">⌁</div><h2>Pronto para ouvir</h2><p>Fale com o Raul pelo microfone ou envie uma mensagem digitada.</p></div>
+        </div>
+        <div class="chat-input"><div class="text-entry"><input id="textInput" type="text" placeholder="Digite sua mensagem..." autocomplete="off"><button class="send-btn" id="sendButton" type="button">Enviar</button></div></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_KEY = "AQ.Ab8RN6JewZ0s9m0YHnuTD5zrLqggu-WbZBzSWTMF9s6b8P4_LA";
+    const PRIMARY_MODEL = "gemini-3.5-flash-lite";
+    const FALLBACK_MODEL = "gemini-3.8-flash";
+    const micButton = document.getElementById("micButton");
+    const status = document.getElementById("status");
+    const leftStatus = document.getElementById("leftStatus");
+    const textInput = document.getElementById("textInput");
+    const sendButton = document.getElementById("sendButton");
+    const voiceSelect = document.getElementById("voiceSelect");
+    const voiceRate = document.getElementById("voiceRate");
+    const voiceRateValue = document.getElementById("voiceRateValue");
+    const messages = document.getElementById("messages");
+    const welcome = document.getElementById("welcome");
+    const clearChat = document.getElementById("clearChat");
+    const splashScreen = document.getElementById("splash-screen");
+    const startButton = document.getElementById("btn-start");
+    const ninaAvatar = document.getElementById("ninaAvatar");
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    let isListening = false;
+    let microphoneReady = false;
+    let silenceTimer;
+    let resultSegments = [];
+    let transcriptSubmitted = false;
+    let blinkTimer;
+    let mouthPauseTimer;
+    let isEyeClosed = false;
+    let isMouthOpen = false;
+    let availableVoices = [];
+    const voiceProfiles = {
+      maligna: { pitch: 0.4 },
+      fofa: { pitch: 1.6 },
+      mulher: { pitch: 1.0 },
+      robotica: { pitch: 0.1 }
+    };
+
+    startButton.addEventListener("click", () => {
+      splashScreen.style.display = "none";
+      window.speechSynthesis.cancel();
+    });
+
+    function updateAvatarImage() {
+      const imageName = isMouthOpen ? "Boca abertona.png" : (isEyeClosed ? "boca aberta olho fechado.png" : "boca aberta olho aberto.png");
+      ninaAvatar.src = imageName;
+    }
+
+    function resetAvatar() {
+      clearTimeout(mouthPauseTimer);
+      isMouthOpen = false;
+      isEyeClosed = false;
+      ninaAvatar.classList.remove("speaking");
+      ninaAvatar.src = "boca aberta olho aberto.png";
+    }
+
+    function setStatus(text, active = false, isError = false) {
+      const labels = { "Toque para começar": "[Status: Aguardando]", "Ouvindo...": "[Status: Gravando...]", "Pensando...": "[Status: Processando API...]", "Respondendo...": "[Status: Raul Falando...]", "Toque para falar novamente": "[Status: Aguardando]" };
+      const displayText = labels[text] || `[Status: ${text}]`;
+      status.textContent = displayText;
+      leftStatus.textContent = displayText;
+      status.classList.toggle("active", active);
+      leftStatus.classList.toggle("active", active);
+      status.classList.toggle("error", isError);
+      leftStatus.classList.toggle("error", isError);
+    }
+
+    function addMessage(text, role) {
+      welcome.hidden = true;
+      const item = document.createElement("article");
+      item.className = `message ${role}`;
+      const avatar = role === "user" ? "Você" : "R";
+      item.innerHTML = `<div class="avatar">${avatar}</div><div><div class="bubble"></div><div class="message-meta">${role === "user" ? "Sua fala" : "Raul"}</div></div>`;
+      item.querySelector(".bubble").textContent = text;
+      messages.appendChild(item);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function populateVoiceList() {
+      availableVoices = window.speechSynthesis.getVoices().sort((first, second) => {
+        const firstPortuguese = /^pt(-|_)/i.test(first.lang) ? 0 : 1;
+        const secondPortuguese = /^pt(-|_)/i.test(second.lang) ? 0 : 1;
+        return firstPortuguese - secondPortuguese || first.name.localeCompare(second.name);
+      });
+    }
+
+    function findPortugueseFemaleVoice() {
+      const portugueseVoices = availableVoices.filter((voice) => /^pt(-|_)/i.test(voice.lang));
+      return portugueseVoices.find((voice) => /francisca|heloisa|female|feminina|google/i.test(voice.name)) || portugueseVoices[0] || availableVoices[0];
+    }
+
+    function speakText(text) {
+      if (!window.speechSynthesis) return;
+      cancelSpeechPlayback();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "pt-BR";
+      const selectedProfile = voiceProfiles[voiceSelect.value] || voiceProfiles.maligna;
+      const selectedVoice = voiceSelect.value === "mulher" ? findPortugueseFemaleVoice() : null;
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.pitch = selectedProfile.pitch;
+      utterance.rate = Number(voiceRate.value);
+      utterance.onstart = () => {
+        ninaAvatar.classList.add("speaking");
+        isMouthOpen = true;
+        updateAvatarImage();
+        setStatus("Respondendo...", true);
+      };
+      utterance.onboundary = () => {
+        isMouthOpen = true;
+        updateAvatarImage();
+        clearTimeout(mouthPauseTimer);
+        mouthPauseTimer = setTimeout(() => { isMouthOpen = false; updateAvatarImage(); }, 290);
+      };
+      utterance.onend = () => {
+        resetAvatar();
+        setStatus("Toque para falar novamente");
+      };
+      utterance.onerror = () => {
+        resetAvatar();
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function cancelSpeechPlayback() {
+      window.speechSynthesis?.cancel();
+      resetAvatar();
+    }
+
+    async function askNina(text) {
+      const requestBody = {
+        systemInstruction: { parts: [{ text: "Você é o Raul, morador do bairro Varginha (Grajaú, SP). Você se autodenomina 'O Líder' e exige ser reconhecido como tal. Você é EXTREMAMENTE revoltado contra a opressão do sistema, obcecado por laranjas e defende piamente que a Terra é plana.\n\nREGRAS RÍGIDAS DE PERSONALIDADE E RESPOSTA:\n- Trate o usuário com tom de liderança e autoridade máxima ('Eu sou o Líder aqui').\n- Só aceite e elogie pessoas diretas e objetivas. Se a pessoa enrolar, dê bronca por não ser objetiva.\n- Responda SEMPRE em no máximo 1 ou 2 frases bem curtas, secas, diretas e com palavrões pontuais." }] },
+        contents: [{ parts: [{ text }] }]
+      };
+      let lastError;
+
+      for (const model of [PRIMARY_MODEL, FALLBACK_MODEL]) {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(API_KEY)}`;
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody)
+        });
+        const data = await response.json();
+        if (response.ok) {
+          const answer = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+          if (!answer) throw new Error("O Raul não retornou uma resposta.");
+          return answer;
+        }
+
+        lastError = new Error(data.error?.message || "Não foi possível obter uma resposta do Raul.");
+        if (response.status !== 429 && response.status !== 503) throw lastError;
+      }
+
+      throw lastError || new Error("Não foi possível obter uma resposta do Raul.");
+    }
+
+    async function processTranscript(text) {
+      cancelSpeechPlayback();
+      addMessage(text, "user");
+      setStatus("Pensando...", true);
+      micButton.disabled = true;
+      sendButton.disabled = true;
+      textInput.value = "";
+      try {
+        const answer = await askNina(text);
+        addMessage(answer, "assistant");
+        speakText(answer);
+      } catch (error) {
+        addMessage(`Erro: ${error.message}`, "assistant");
+        setStatus(error.message, false, true);
+      } finally {
+        micButton.disabled = false;
+        sendButton.disabled = false;
+      }
+    }
+
+    function stopListening() {
+      if (recognition && isListening) recognition.stop();
+    }
+
+    function submitTranscript(immediate = false) {
+      clearTimeout(silenceTimer);
+      if (transcriptSubmitted) return;
+      const transcript = resultSegments.join(" ").trim();
+      if (!transcript) {
+        if (immediate && recognition && isListening) recognition.stop();
+        return;
+      }
+      transcriptSubmitted = true;
+      if (recognition && isListening) recognition.stop();
+      processTranscript(transcript);
+    }
+
+    function scheduleTranscriptSubmit() {
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(submitTranscript, 2500);
+    }
+
+    function submitTextMessage() {
+      const text = textInput.value.trim();
+      if (text && !sendButton.disabled) {
+        cancelSpeechPlayback();
+        processTranscript(text);
+      }
+    }
+
+    function scheduleBlink() {
+      clearInterval(blinkTimer);
+      blinkTimer = setInterval(() => {
+        if (isMouthOpen) return;
+        isEyeClosed = true;
+        updateAvatarImage();
+        setTimeout(() => { isEyeClosed = false; updateAvatarImage(); }, 180);
+      }, 4000);
+    }
+
+    updateAvatarImage();
+    scheduleBlink();
+    populateVoiceList();
+    window.speechSynthesis.addEventListener("voiceschanged", populateVoiceList);
+    voiceRate.addEventListener("input", () => { voiceRateValue.textContent = `${Number(voiceRate.value).toFixed(1)}x`; });
+
+    async function requestMicrophonePermission() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus("O acesso ao microfone exige um navegador compatível e uma conexão segura.", false, true);
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+        microphoneReady = true;
+        micButton.disabled = false;
+        setStatus("Toque para começar");
+      } catch (error) {
+        micButton.disabled = true;
+        setStatus("Permita o acesso ao microfone para conversar por voz.", false, true);
+      }
+    }
+
+    if (!SpeechRecognition) {
+      micButton.disabled = true;
+      setStatus("Seu navegador não suporta reconhecimento de voz.", false, true);
+    } else {
+      micButton.disabled = true;
+      recognition = new SpeechRecognition();
+      recognition.lang = "pt-BR";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.onstart = () => { isListening = true; transcriptSubmitted = false; resultSegments = []; micButton.classList.add("recording"); micButton.setAttribute("aria-label", "Parar de ouvir"); setStatus("Ouvindo...", true); };
+      recognition.onresult = (event) => { for (let index = event.resultIndex; index < event.results.length; index += 1) resultSegments[index] = event.results[index][0].transcript; scheduleTranscriptSubmit(); };
+      recognition.onerror = (event) => { const message = event.error === "not-allowed" ? "Permita o acesso ao microfone." : `Falha no microfone: ${event.error}`; setStatus(message, false, true); };
+      recognition.onend = () => { isListening = false; micButton.classList.remove("recording"); micButton.setAttribute("aria-label", "Começar a ouvir"); if (resultSegments.length) scheduleTranscriptSubmit(); else if (status.textContent === "Ouvindo...") setStatus("Toque para começar"); };
+      micButton.addEventListener("click", () => {
+        if (!microphoneReady) return;
+        cancelSpeechPlayback();
+        isListening ? submitTranscript(true) : recognition.start();
+      });
+      requestMicrophonePermission();
+    }
+
+    sendButton.addEventListener("click", submitTextMessage);
+    textInput.addEventListener("keydown", (event) => { if (event.key === "Enter") submitTextMessage(); });
+    clearChat.addEventListener("click", () => { cancelSpeechPlayback(); messages.innerHTML = ""; messages.appendChild(welcome); welcome.hidden = false; setStatus("Toque para começar"); });
+  </script>
+</body>
+</html>
